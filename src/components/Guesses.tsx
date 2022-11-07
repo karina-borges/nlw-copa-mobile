@@ -1,48 +1,50 @@
 import { FlatList, useToast } from "native-base";
 import { useEffect, useState } from "react";
+
 import { api } from "../services/api";
-import { Game, GameProps } from "./Game";
+
+import { Share } from "react-native";
+import { Game, GameProps } from "../components/Game";
+import { EmptyMyPoolList } from "./EmptyMyPoolList";
 import { Loading } from "./Loading";
 
 interface Props {
   poolId: string;
+  code: string;
 }
 
-export function Guesses({ poolId }: Props) {
-  const [isLoading, setIsLoading] = useState(false);
+export function Guesses({ poolId, code }: Props) {
+  const [isLoading, setIsLoading] = useState(true);
   const [games, setGames] = useState<GameProps[]>([]);
   const [firstTeamPoints, setFirstTeamPoints] = useState("");
   const [secondTeamPoints, setSecondTeamPoints] = useState("");
 
   const toast = useToast();
 
-  const fetchGames = async () => {
+  async function fetchGames() {
     try {
       setIsLoading(true);
+
       const response = await api.get(`/pools/${poolId}/games`);
       setGames(response.data.games);
     } catch (error) {
       console.log(error);
 
       toast.show({
-        title: "Não foi possível carregar os detalhes do bolão",
+        title: "Não foi possivel carregar os jogos",
         placement: "top",
         bgColor: "red.500",
       });
     } finally {
       setIsLoading(false);
     }
-  };
-
-  if (isLoading) {
-    return <Loading />;
   }
 
-  const handleGuessConfirm = async (gameId: string) => {
+  async function handleGuessConfirm(gameId: string) {
     try {
       if (!firstTeamPoints.trim() || !secondTeamPoints.trim()) {
         return toast.show({
-          title: "Informe os pontos de cada time",
+          title: "Informe o placar do palpite",
           placement: "top",
           bgColor: "red.500",
         });
@@ -53,8 +55,11 @@ export function Guesses({ poolId }: Props) {
         secondTeamPoints: Number(secondTeamPoints),
       });
 
+      setFirstTeamPoints(null);
+      setSecondTeamPoints(null);
+
       toast.show({
-        title: "Palpite enviado com sucesso!",
+        title: "Palpite realizado com sucesso",
         placement: "top",
         bgColor: "green.500",
       });
@@ -69,11 +74,21 @@ export function Guesses({ poolId }: Props) {
         bgColor: "red.500",
       });
     }
+  }
+
+  const handleCodeShare = async () => {
+    await Share.share({
+      message: `Olha o código do meu bolão: ${code}`,
+    });
   };
 
   useEffect(() => {
     fetchGames();
   }, [poolId]);
+
+  if (isLoading) {
+    return <Loading />;
+  }
 
   return (
     <FlatList
@@ -86,6 +101,10 @@ export function Guesses({ poolId }: Props) {
           setSecondTeamPoints={setSecondTeamPoints}
           onGuessConfirm={() => handleGuessConfirm(item.id)}
         />
+      )}
+      _contentContainerStyle={{ pb: 20 }}
+      ListEmptyComponent={() => (
+        <EmptyMyPoolList code={code} onShare={() => handleCodeShare()} />
       )}
     />
   );
