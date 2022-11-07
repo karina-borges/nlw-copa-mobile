@@ -90,7 +90,7 @@ export const Details = () => {
                 onPress={() => setOptionSelected("Ranking do grupo")}
               />
             </HStack>
-            <Guesses poolId={poolDetails.id} />
+            <Guesses poolId={poolDetails.id} code={poolDetails.code} />
           </VStack>
         ) : (
           <EmptyMyPoolList
