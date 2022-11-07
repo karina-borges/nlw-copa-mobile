@@ -2,7 +2,7 @@ import { Pressable, Row, Text } from "native-base";
 
 interface Props {
   code: string;
-  onShare: () => void;
+  onShare?: () => void;
 }
 
 export function EmptyMyPoolList({ code, onShare }: Props) {
